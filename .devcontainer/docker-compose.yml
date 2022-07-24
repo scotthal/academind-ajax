@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sleep infinity
+    volumes:
+      - ..:/workspaces/node-mongo-space
+    ports:
+      - "3000:3000"
+    networks:
+      - node-mongo
+  mongo:
+    image: mongo:latest
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: noprod
+    volumes:
+      - mongodata:/data/db
+    networks:
+      - node-mongo
+volumes:
+  mongodata:
+networks:
+  node-mongo:
+    driver: bridge
