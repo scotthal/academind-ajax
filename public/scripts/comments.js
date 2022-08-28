@@ -19,14 +19,23 @@ const renderCommentsList = (comments) => {
   return commentListElement;
 };
 
-loadCommentsBtnElement.addEventListener("click", async () => {
+const loadComments = async () => {
   const postId = loadCommentsBtnElement.dataset.postid;
   const res = await fetch(`/posts/${postId}/comments`);
   const responseData = await res.json();
-  const commentsListElement = renderCommentsList(responseData);
-  commentsSectionElement.innerHTML = "";
-  commentsSectionElement.appendChild(commentsListElement);
-});
+  if (responseData && responseData.length > 0) {
+    const commentsListElement = renderCommentsList(responseData);
+    commentsSectionElement.innerHTML = "";
+    commentsSectionElement.appendChild(commentsListElement);
+  } else {
+    commentsSectionElement.innerHTML = "";
+    const noCommentsParagraph = document.createElement("p");
+    noCommentsParagraph.textContent = "There weren't any comments.";
+    commentsSectionElement.appendChild(noCommentsParagraph);
+  }
+};
+
+loadCommentsBtnElement.addEventListener("click", loadComments);
 
 commentsFormElement.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -39,9 +48,11 @@ commentsFormElement.addEventListener("submit", async (event) => {
   const postId = commentsFormElement.dataset.postid;
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
-  fetch(`/posts/${postId}/comments`, {
+  await fetch(`/posts/${postId}/comments`, {
     method: "POST",
     headers: headers,
     body: JSON.stringify(comment),
   });
+
+  loadComments();
 });
