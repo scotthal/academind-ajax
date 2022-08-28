@@ -34,5 +34,14 @@ commentsFormElement.addEventListener("submit", async (event) => {
   const enteredTitle = commentTitleElement.value;
   const enteredText = commentTextElement.value;
 
-  console.log({ title: enteredTitle, text: enteredText });
+  const comment = { title: enteredTitle, text: enteredText };
+
+  const postId = commentsFormElement.dataset.postid;
+  const headers = new Headers();
+  headers.append("Content-Type", "application/json");
+  fetch(`/posts/${postId}/comments`, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(comment),
+  });
 });
