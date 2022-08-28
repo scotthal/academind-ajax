@@ -19,23 +19,43 @@ const renderCommentsList = (comments) => {
   return commentListElement;
 };
 
+const commentError = (message) => {
+  commentsSectionElement.innerHTML = "";
+  const errorParagraphElement = document.createElement("p");
+  errorParagraphElement.textContent = message;
+  commentsSectionElement.appendChild(errorParagraphElement);
+};
+
 const loadComments = async () => {
   const postId = loadCommentsBtnElement.dataset.postid;
-  const res = await fetch(`/posts/${postId}/comments`);
-  const responseData = await res.json();
-  if (responseData && responseData.length > 0) {
-    const commentsListElement = renderCommentsList(responseData);
-    commentsSectionElement.innerHTML = "";
-    commentsSectionElement.appendChild(commentsListElement);
-  } else {
-    commentsSectionElement.innerHTML = "";
-    const noCommentsParagraph = document.createElement("p");
-    noCommentsParagraph.textContent = "There weren't any comments.";
-    commentsSectionElement.appendChild(noCommentsParagraph);
+  try {
+    const res = await fetch(`/posts/${postId}/comments`);
+    if (!res.ok) {
+      commentError("Unable to load comments.");
+      return;
+    }
+
+    const responseData = await res.json();
+    if (responseData && responseData.length > 0) {
+      const commentsListElement = renderCommentsList(responseData);
+      commentsSectionElement.innerHTML = "";
+      commentsSectionElement.appendChild(commentsListElement);
+    } else {
+      commentError("There aren't any comments.");
+    }
+  } catch (error) {
+    commentError("Unable to load comments.");
   }
 };
 
 loadCommentsBtnElement.addEventListener("click", loadComments);
+
+const commentSubmissionError = () => {
+  commentsSectionElement.innerHTML = "";
+  const errorParagraphElement = document.createElement("p");
+  errorParagraphElement.textContent = "Unable to submit comment.";
+  commentsSectionElement.appendChild(errorParagraphElement);
+};
 
 commentsFormElement.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -48,11 +68,19 @@ commentsFormElement.addEventListener("submit", async (event) => {
   const postId = commentsFormElement.dataset.postid;
   const headers = new Headers();
   headers.append("Content-Type", "application/json");
-  await fetch(`/posts/${postId}/comments`, {
-    method: "POST",
-    headers: headers,
-    body: JSON.stringify(comment),
-  });
+  try {
+    const response = await fetch(`/posts/${postId}/comments`, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(comment),
+    });
 
-  loadComments();
+    if (response.ok) {
+      loadComments();
+    } else {
+      commentError("Unable to submit comment.");
+    }
+  } catch (error) {
+    commentError("Unable to submit comment.");
+  }
 });
